@@ -1,0 +1,180 @@
+import sys
+import math
+
+class Robot():
+    def __init__(self):
+        self.storage   = [0,0,0,0,0]
+        self.expertise = [0,0,0,0,0]
+        self.available = [0,0,0,0,0]
+        self.sample_count   = 0
+        self.sample_id      = []
+        self.cost           = []
+        self.health         = []
+        self.carried_by     = []
+        self.rank           = []
+        self.target         = ''
+        
+        self.flaga          = 0
+        self.plecak         = 0
+        self.licznik        = 1
+        self.list_licznik   = []
+        self.list_done      = []
+        self.list_doing     = []
+    def Update_storage(self,a,b,c,d,e):
+        self.storage = [a,b,c,d,e]
+    def Update_available(self,a,b,c,d,e):
+        self.available = [a,b,c,d,e]
+    def Update_sample_count(self,counter):
+        self.sample_count = counter
+    def Add_cost(self,sample_id,cost,health,carried_by,rank):
+        self.sample_id.append(sample_id)
+        self.health.append(health)
+        self.cost.append(cost)
+        self.carried_by.append(carried_by)
+        self.rank.append(rank)
+    def Take_sample(self):
+        self.print_('',self.licznik)
+    def Diagnose_sample(self):
+        for i in range(self.sample_count):
+            if self.carried_by[i] == 0 and not (self.sample_id[i] in self.list_doing or self.sample_id[i] in self.list_done):
+                self.list_doing.append(self.sample_id[i])
+                break
+    def Doing_to_done(self,id_):
+        self.list_done.append(self.list_doing[id_])
+        for i in range(len(self.list_doing)):
+            if self.list_doing[i] == id_:
+                self.list_doing.pop(i)
+                break
+    def Faza_Samples(self):
+        if self.licznik%3 == 0:
+            self.print_('DIAGNOSIS','')
+        else:
+            self.print_('',2)
+        self.licznik += 1
+    def Faza_Diagnosis(self):
+        for i in range(self.sample_count):
+            if self.carried_by[i] == 0 and self.cost[i][0] == -1:
+                self.print_('',self.sample_id[i])
+                self.list_doing.append(self.sample_id[i])
+                break
+        else:
+            self.print_('MOLECULES','')
+    def Faza_Molecules(self):
+        temp = -1
+        for i in range(len(self.sample_id)):
+            if self.sample_id[i] == self.list_doing[0]:
+                temp = i
+        if self.cost[temp][0] > self.storage[0]:
+            self.print_('','A')
+        elif self.cost[temp][1] > self.storage[1]:
+            self.print_('','B')
+        elif self.cost[temp][2] > self.storage[2]:
+            self.print_('','C')
+        elif self.cost[temp][3] > self.storage[3]:
+            self.print_('','D')
+        elif self.cost[temp][4] > self.storage[4]:
+            self.print_('','E')
+        else:
+            self.print_('LABORATORY','')
+    def Faza_Laboratory(self):
+        if self.flaga == 0:
+            self.print_('',self.list_doing[0])
+            self.list_done.append(self.list_doing[0])
+            self.list_doing.pop(0)
+            self.flaga = 1
+        elif self.flaga == 1:
+            if len(self.list_doing) > 0:
+                self.print_('MOLECULES','')
+            else:
+                self.print_('SAMPLES'  ,'')
+            self.flaga = 0
+    def Calcalate(self):
+        maxim = 1
+        for i in range(self.sample_count):
+            if self.sample_id[i] > maxim:
+                maxim = self.sample_id[i]
+        if   self.target == 'START_POS' :
+            self.print_('SAMPLES','')
+        elif self.target == 'SAMPLES'   :
+            self.Faza_Samples()
+            
+        elif self.target == 'DIAGNOSIS' :
+            self.Faza_Diagnosis()
+            
+        elif self.target == 'MOLECULES':
+            self.Faza_Molecules()
+                
+        elif self.target == 'LABORATORY':
+            self.Faza_Laboratory()
+
+    def print_(self,module='',action=''):
+
+        if module != '':
+            print('GOTO'   , module)
+        elif action != '':
+            print('CONNECT', action)
+
+def first_outputs (klasa):
+    for i in range(2):
+        target, eta, score, storage_a, storage_b, storage_c, storage_d, storage_e, expertise_a, expertise_b, expertise_c, expertise_d, expertise_e = input().split()
+        eta = int(eta)
+        score = int(score)
+        storage_a = int(storage_a)
+        storage_b = int(storage_b)
+        storage_c = int(storage_c)
+        storage_d = int(storage_d)
+        storage_e = int(storage_e)
+        expertise_a = int(expertise_a)
+        expertise_b = int(expertise_b)
+        expertise_c = int(expertise_c)
+        expertise_d = int(expertise_d)
+        expertise_e = int(expertise_e)
+        
+        if i == 0:
+            print('TARGET',target,file=sys.stderr)
+            klasa.target = target
+            klasa.Update_storage(storage_a,storage_b,storage_c,storage_d,storage_e)    
+        #print('storage a:',storage_a,'b:',storage_b,'c:',storage_c,'d:',storage_d,'e:',storage_e,file=sys.stderr)
+        #print('expertise a:',expertise_a,'b:',expertise_b,'c:',expertise_c,'d:',expertise_d,'e:',expertise_e,file=sys.stderr)
+    return klasa
+def second_outputs(klasa):
+    available_a, available_b, available_c, available_d, available_e = [int(i) for i in input().split()]
+    klasa.Update_available(available_a,available_b,available_c,available_d,available_e) 
+    return klasa
+def third_outputs (klasa):
+    sample_count = int(input())
+    klasa.Update_sample_count(sample_count)
+    #print('sample count:',sample_count,file=sys.stderr)
+    for i in range(sample_count):
+        sample_id, carried_by, rank, expertise_gain, health, cost_a, cost_b, cost_c, cost_d, cost_e = input().split()
+        sample_id = int(sample_id)
+        carried_by = int(carried_by)
+        rank = int(rank)
+        health = int(health)
+        cost_a = int(cost_a)
+        cost_b = int(cost_b)
+        cost_c = int(cost_c)
+        cost_d = int(cost_d)
+        cost_e = int(cost_e)
+        klasa.Add_cost(sample_id,[cost_a,cost_b,cost_c,cost_d,cost_e],health,carried_by,rank)
+        print('sample_id',sample_id,'carried_by',carried_by,'rank',rank,'health',health,file=sys.stderr)
+        print('cost a:',cost_a,'b:',cost_b,'c:',cost_c,'d:',cost_d,'e:',cost_e,file=sys.stderr)
+    return klasa
+        
+project_count = int(input())
+for i in range(project_count):
+    a, b, c, d, e = [int(j) for j in input().split()]
+flaga = 0
+BOT = Robot()
+# game loop
+while True:
+    first_outputs (BOT)
+    second_outputs(BOT)
+    third_outputs (BOT)
+
+    BOT.Calcalate()
+    BOT.cost = []
+    BOT.sample_id = []
+    BOT.carried_by = []
+    BOT.health = []
+    BOT.rank=[]
